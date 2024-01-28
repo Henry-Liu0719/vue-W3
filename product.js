@@ -22,35 +22,121 @@ function logout(){
     data() {
       return {
         products: [],
-        temp:{}
+        temp:{},
+        productModal:null,
+        delProductModal:null,
+
       }
     },
         methods: {
-          editItem(item) {
-            // this.temp = JSON.parse(JSON.stringify(item));
-            // console.log(1);
-            this.temp = { ...item };
-            // console.log(this.temp);
+          deleteProduct(){
+            axios
+              .delete(`${baseURL}/v2/api/gobobofu/admin/product/${this.temp.id}`)
+              .then((res) => {
+                console.log(res);
+                // alert('刪除成功');
+                // window.location = './product.html';
+                // this.products = res.data.products;
+                this.getProducts();
+                this.delProductModal.hide();
+              }).catch((error) => {
+                console.dir(error);
+                alert(error.response);
+              })
           },
+          getProducts(){
+              axios
+              .get(`${baseURL}/v2/api/gobobofu/admin/products`, {})
+              .then((res) => {
+                console.log(res.data.products);
+                this.products = res.data.products;
+              }).catch((error) => {
+                console.log(error.response);
+                alert(error.response);
+            })
+          },
+          updateProduct(){
+            if(this.temp.isNew){
+              // this.temp = {
+              //   category: "甜甜圈",
+              //   content: "尺寸：14x14cm",
+              //   description: "濃郁的草莓風味，中心填入滑順不膩口的卡士達內餡，帶來滿滿幸福感！",
+              //   id: "-L9tH8jxVb2Ka_DYPwng",
+              //   is_enabled: 1,
+              //   origin_price: 150,
+              //   price: 99,
+              //   title: "草莓莓果夾心圈",
+              //   unit: "個",
+              //   num: 10,
+              //   imageUrl: "https://images.unsplash.com/photo-1583182332473-b31ba08929c8?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NzR8fGRvbnV0fGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
+              //   imagesUrl: [
+              //     "https://images.unsplash.com/photo-1626094309830-abbb0c99da4a?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2832&q=80",
+              //     "https://images.unsplash.com/photo-1559656914-a30970c1affd?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTY0fHxkb251dHxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60"
+              //   ]
+              // }
+              axios
+              .post(`${baseURL}/v2/api/gobobofu/admin/product`, {'data':this.temp})
+              .then((res) => {
+                console.log(res);
+                // this.products = res.data.products;
+                this.getProducts();
+                this.productModal.hide();
+                // alert('修改成功');
+                // window.location = './product.html';
+              }).catch((error) => {
+                console.dir(error);
+              })
+            }else{
+              axios
+              .put(`${baseURL}/v2/api/gobobofu/admin/product/${this.temp.id}`, {'data':this.temp})
+              .then((res) => {
+                console.log(res);
+                this.getProducts();
+                this.productModal.hide();
+                // this.products = res.data.products;
+                // alert('新增成功');
+                // window.location = './product.html';
+              }).catch((error) => {
+                console.dir(error);
+              })
+            }
+          },
+          openModal(status,product){
+            if(status == 'new'){
+              this.temp = {
+                imagesUrl : [],
+                isNew : true
+              }
+              this.productModal.show();
+            }else if(status == 'edit'){
+              this.temp = {...product}
+            if(!Array.isArray(this.temp.imagesUrl)){
+              this.temp.imagesUrl = [];
+            }
+              this.productModal.show();
+            }else if(status == 'delete'){
+              this.temp = {...product}
+              this.delProductModal.show();
+            }
+          }
+          
         },
 		mounted(){
       axios
       .post(`${baseURL}/v2/api/user/check`, {})
       .then((res) => {
         // console.log(res);
-        axios
-        .get(`${baseURL}/v2/api/gobobofu/admin/products/all`, {})
-        .then((res) => {
-          // console.log(res.data);
-          this.products = res.data.products;
-        }).catch((error) => {
-          console.log(error.response);
-        })
+        this.getProducts();
       }).catch((error) => {
         console.dir(error);
         alert(error.data.message);
-        // window.location = "./index.html"
+        window.location = "./index.html"
       })
+      //build modal
+      console.log(this.$refs);
+      this.productModal = new bootstrap.Modal(this.$refs.productModal);
+      this.delProductModal = new bootstrap.Modal(this.$refs.delProductModal);
+
     }
   });
 	app.mount('#app');
@@ -58,7 +144,7 @@ function logout(){
 
 // 產品資料格式
 
-products: [
+products: [ 
   {
     category: "甜甜圈",
     content: "尺寸：14x14cm",
@@ -81,7 +167,7 @@ products: [
     content: "尺寸：6寸",
     description: "蜜蜂蜜蛋糕，夾層夾上酸酸甜甜的檸檬餡，清爽可口的滋味讓人口水直流！",
     id: "-McJ-VvcwfN1_Ye_NtVA",
-    is_enabled: 16,
+    is_enabled: 1,
     origin_price: 1000,
     price: 900,
     title: "蜂蜜檸檬蛋糕",
